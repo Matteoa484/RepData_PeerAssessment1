@@ -8,18 +8,206 @@ output:
 
 ## Loading and preprocessing the data
 
+</br>
+Libraries:
 
+```{r, echo=TRUE, message=FALSE}
+library(dplyr)
+library(ggplot2)
+```
+
+</br>
+Code to load data, with `readr::col_types` to parse columns' values in the correct format.
+
+```{r, echo=TRUE}
+raw_data <- 
+    readr::read_delim(
+    file = "activity.zip",
+    delim = ",",
+    na = "NA",
+    col_names = TRUE,
+    col_types    = readr::cols(
+        steps    = readr::col_double(),
+        date     = readr::col_date(format = ""),
+        interval = readr::col_double()
+    )
+  )
+```
+
+</br>
 
 ## What is mean total number of steps taken per day?
 
+</br>
 
+#### 1. Make a histogram of the total number of steps taken each day
+
+Used `dplyr::filter()` to filter out NAs, `dplyr::group_by()` and `dplyr::summarise()` to respectively group by date (day) and calculate the sum of steps for each group. Then `ggplot2::geom_histogram()` to plot results.
+
+```{r, echo=TRUE, message=FALSE, fig.align='center'}
+# prepare and compute data
+
+daily_tot_steps <- 
+    raw_data %>%
+    filter(!is.na(steps)) %>%
+    group_by(date) %>%
+    summarise(tot_steps = sum(steps))
+
+
+
+# plot the results
+
+ggplot(daily_tot_steps) + 
+geom_histogram(mapping = aes(x = tot_steps), binwidth = 750, fill = "gray66", color = "white") +
+theme_bw() +
+labs(x = "", y = "Count", title = "Histogram of the total number of steps taken each day")
+
+```
+
+</br>
+
+#### 2. Calculate and report the **mean** and **median** total number of steps taken per day
+
+</br>
+
+```{r, echo=TRUE}
+# penalize scientific notations
+options(scipen = 9999)
+
+# calculate mean and median
+
+daily_steps_mean <- with(daily_tot_steps, round(mean(tot_steps, na.rm = TRUE), digits = 2))
+daily_steps_med  <- median(daily_tot_steps$tot_steps, na.rm = TRUE)
+```
+
+```{r, echo=TRUE}
+# mean
+daily_steps_mean
+```
+
+```{r, echo=TRUE}
+# median
+daily_steps_med
+```
+</br>
+
+The mean is **`r daily_steps_mean`** and the median is **`r daily_steps_med`**.
+
+</br>
 
 ## What is the average daily activity pattern?
 
+</br>
 
+#### 1. Make a time series plot of the 5-minute interval and the average number of steps taken, averaged across all days
+
+Used `dplyr::filter()` to remove NAs, `dplyr::group_by()` and `dplyr::summarise()` to respectively group by interval and calculate the average of steps for each group. Then `ggplot2::geom_line()` to plot results.
+
+```{r, echo=TRUE, message=FALSE}
+int_avg_steps <-
+    raw_data %>%
+    filter(!is.na(steps)) %>%
+    group_by(interval) %>%
+    summarise(avg_steps = mean(steps))
+
+
+ggplot(int_avg_steps) +
+geom_line(mapping = aes(x = interval, y = avg_steps))
+```
+
+</br>
+
+#### 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+</br>
+
+```{r, echo=TRUE, message=FALSE}
+max_int <- as.numeric(int_avg_steps[which.max(int_avg_steps$avg_steps), 1])
+
+# maximum 5-min interval
+max_int
+```
+
+</br>
 
 ## Imputing missing values
+
+</br>
+
+#### 1. Calculate and report the total number of missing values in the dataset
+
+</br>
+
+```{r, echo=TRUE}
+miss_data <- sum(is.na(raw_data$steps))
+
+# number of missing values
+miss_data
+```
+
+</br>
+
+#### 2. Devise a strategy for filling in all of the missing values in the dataset.
+
+I replaced all missing values (NAs) with the correspondent 5-minute interval average, already calculated in the previous question.
+
+</br>
+
+#### 3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+</br>
+
+```{r, echo=TRUE}
+fill_data <- raw_data
+
+fill_data[is.na(fill_data$steps), 1] <- 
+    int_avg_steps[int_avg_steps$interval %in% fill_data$interval, 2]
+```
+
+</br>
+
+#### 4. Make a histogram of the total number of steps taken each day
+
+</br>
+
+```{r, echo=TRUE, fig.align='center'}
+# prepare and compute data
+
+fill_daily_steps <- 
+  fill_data %>%
+  group_by(date) %>%
+  summarise(tot_steps = sum(steps, na.rm = TRUE))
+
+
+# plot results
+
+ggplot(fill_daily_steps) + 
+  geom_histogram(mapping = aes(x = tot_steps), binwidth = 750, fill = "gray66", color = "white") +
+  theme_bw() +
+  labs(x = "", y = "Count", title = "Histogram of the total number of steps taken each day (filled)")
+```
+
+</br>
+
+####  Calculate and report the mean and median total number of steps taken per day.
+
+</br>
+
+```{r}
+# calculate meand and median
+
+fill_steps_mean <- with(fill_daily_steps, round(mean(tot_steps, na.rm = TRUE), digits = 2))
+fill_steps_med  <- median(fill_daily_steps$tot_steps, na.rm = TRUE)
+```
+```{r}
+fill_steps_mean
+```
+```{r}
+fill_steps_med
+```
 
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+
