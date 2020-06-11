@@ -50,3 +50,10 @@ fill_steps_med  <- median(fill_daily_steps$tot_steps)
 
 #boxplot(daily_tot_steps$tot_steps, fill_daily_steps$tot_steps)
 
+
+# show where missing values are interval-wise
+
+raw_data %>% filter(is.na(steps)) %>% group_by(interval) %>% summarise(nr = n())
+
+# x is previous data saved
+ggplot(data = x) + geom_line(mapping = aes(x = interval, y = nr))
