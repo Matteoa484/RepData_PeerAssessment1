@@ -5,9 +5,10 @@ output:
     keep_md: true
 ---
 
+</br></br>
 
 ## Loading and preprocessing the data
-
+***
 </br>
 Libraries:
 
@@ -22,22 +23,22 @@ Code to load data, with `readr::col_types` to parse columns' values in the corre
 ```{r, echo=TRUE}
 raw_data <- 
     readr::read_delim(
-    file = "activity.zip",
-    delim = ",",
-    na = "NA",
-    col_names = TRUE,
-    col_types    = readr::cols(
-        steps    = readr::col_double(),
-        date     = readr::col_date(format = ""),
-        interval = readr::col_double()
+        file = "activity.zip",
+        delim = ",",
+        na = "NA",
+        col_names = TRUE,
+        col_types = readr::cols(
+            steps    = readr::col_double(),
+            date     = readr::col_date(format = ""),
+            interval = readr::col_double()
+        )
     )
-  )
 ```
 
 </br>
 
 ## What is mean total number of steps taken per day?
-
+***
 </br>
 
 #### 1. Make a histogram of the total number of steps taken each day
@@ -52,7 +53,6 @@ daily_tot_steps <-
     filter(!is.na(steps)) %>%
     group_by(date) %>%
     summarise(tot_steps = sum(steps))
-
 
 
 # plot the results
@@ -72,6 +72,7 @@ labs(x = "", y = "Count", title = "Histogram of the total number of steps taken 
 
 ```{r, echo=TRUE}
 # penalize scientific notations
+
 options(scipen = 9999)
 
 # calculate mean and median
@@ -96,14 +97,14 @@ The mean is **`r daily_steps_mean`** and the median is **`r daily_steps_med`**.
 </br>
 
 ## What is the average daily activity pattern?
-
+***
 </br>
 
 #### 1. Make a time series plot of the 5-minute interval and the average number of steps taken, averaged across all days
 
 Used `dplyr::filter()` to remove NAs, `dplyr::group_by()` and `dplyr::summarise()` to respectively group by interval and calculate the average of steps for each group. Then `ggplot2::geom_line()` to plot results.
 
-```{r, echo=TRUE, message=FALSE}
+```{r, echo=TRUE, message=FALSE, fig.align='center'}
 int_avg_steps <-
     raw_data %>%
     filter(!is.na(steps)) %>%
@@ -112,7 +113,9 @@ int_avg_steps <-
 
 
 ggplot(int_avg_steps) +
-geom_line(mapping = aes(x = interval, y = avg_steps))
+theme_bw() +
+geom_line(mapping = aes(x = interval, y = avg_steps), size = 0.8) +
+labs(x = "Interval", y = "Average number of steps")
 ```
 
 </br>
@@ -131,7 +134,7 @@ max_int
 </br>
 
 ## Imputing missing values
-
+***
 </br>
 
 #### 1. Calculate and report the total number of missing values in the dataset
@@ -170,7 +173,7 @@ fill_data[is.na(fill_data$steps), 1] <-
 
 </br>
 
-```{r, echo=TRUE, fig.align='center'}
+```{r, echo=TRUE, message=FALSE, fig.align='center'}
 # prepare and compute data
 
 fill_daily_steps <- 
@@ -193,21 +196,80 @@ ggplot(fill_daily_steps) +
 
 </br>
 
-```{r}
+```{r, echo=TRUE}
 # calculate meand and median
 
 fill_steps_mean <- with(fill_daily_steps, round(mean(tot_steps, na.rm = TRUE), digits = 2))
 fill_steps_med  <- median(fill_daily_steps$tot_steps, na.rm = TRUE)
 ```
-```{r}
+```{r, echo=TRUE}
 fill_steps_mean
 ```
-```{r}
+```{r, echo=TRUE}
 fill_steps_med
 ```
 
+</br>
+
+#### Do these values differ from the estimates from the first part of the assignment?
+
+</br>
+
+The differences are minimal; the mean and median of the dataset without NAs are respectively **`r daily_steps_mean`** and **`r daily_steps_med`** while the same values for the "filled" dataset are **`r fill_steps_mean`** and **`r fill_steps_med`**.  
+
+</br>
+The missing values are evenly distributed through the different intervals (full days misses) and replacing them with the interval average doesn't change mean and median values.
+
+```{r, echo=TRUE}
+# number of missing values for each interval
+
+raw_data %>%
+filter(is.na(steps)) %>%
+group_by(interval) %>%
+summarise(nr_of_missing = n()) %>%
+glimpse()
+```
+
+</br>
+
+```{r, echo=TRUE}
+# line plot of number of missing value for each interval
+
+raw_data %>%
+filter(is.na(steps)) %>%
+group_by(interval) %>%
+summarise(nr_of_missing = n()) %>%
+ggplot() + 
+geom_line(mapping = aes(x = interval, y = nr_of_missing), size = 0.8) +
+theme_bw() +
+labs(x = "Interval", y = "Number of missing values")
+```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+***
+</br>
 
+```{r, echo=TRUE, message=FALSE, fig.align='center'}
+weekday <-
+    c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+
+weekend <-
+    c("Saturday", "Sunday")
+
+fill_data %>%
+mutate(
+    day_type = case_when(
+        weekdays(date) %in% weekday ~ "weekday",
+        weekdays(date) %in% weekend ~ "weekend"
+    ), day_type = forcats::as_factor(day_type)
+) %>%
+group_by(day_type, interval) %>%
+summarise(avg_steps = mean(steps)) %>%
+ggplot() +
+geom_line(mapping = aes(x = interval, y = avg_steps), size = 0.8) +
+theme_bw() +
+facet_grid(rows = vars(day_type)) +
+labs(x = "Interval", y = "Number of steps")
+```
 
