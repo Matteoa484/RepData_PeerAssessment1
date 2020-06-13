@@ -12,7 +12,8 @@ output:
 </br>
 Libraries:
 
-```{r, echo=TRUE, message=FALSE}
+
+```r
 library(dplyr)
 library(ggplot2)
 ```
@@ -20,7 +21,8 @@ library(ggplot2)
 </br>
 Code to load data, with `readr::col_types` to parse columns' values in the correct format.
 
-```{r, echo=TRUE}
+
+```r
 raw_data <- 
     readr::read_delim(
         file = "activity.zip",
@@ -45,7 +47,8 @@ raw_data <-
 
 Used `dplyr::filter()` to filter out NAs, `dplyr::group_by()` and `dplyr::summarise()` to respectively group by date (day) and calculate the sum of steps for each group. Then `ggplot2::geom_histogram()` to plot results.
 
-```{r, echo=TRUE, message=FALSE, fig.align='center'}
+
+```r
 # prepare and compute data
 
 daily_tot_steps <- 
@@ -61,8 +64,9 @@ ggplot(daily_tot_steps) +
 geom_histogram(mapping = aes(x = tot_steps), binwidth = 750, fill = "gray66", color = "white") +
 theme_bw() +
 labs(x = "", y = "Count", title = "Histogram of the total number of steps taken each day")
-
 ```
+
+<img src="PA1_template_files/figure-html/unnamed-chunk-3-1.png" style="display: block; margin: auto;" />
 
 </br>
 
@@ -70,7 +74,8 @@ labs(x = "", y = "Count", title = "Histogram of the total number of steps taken 
 
 </br>
 
-```{r, echo=TRUE}
+
+```r
 # penalize scientific notations
 
 options(scipen = 9999)
@@ -81,18 +86,28 @@ daily_steps_mean <- with(daily_tot_steps, round(mean(tot_steps, na.rm = TRUE), d
 daily_steps_med  <- median(daily_tot_steps$tot_steps, na.rm = TRUE)
 ```
 
-```{r, echo=TRUE}
+
+```r
 # mean
 daily_steps_mean
 ```
 
-```{r, echo=TRUE}
+```
+## [1] 10766.19
+```
+
+
+```r
 # median
 daily_steps_med
 ```
+
+```
+## [1] 10765
+```
 </br>
 
-The mean is **`r daily_steps_mean`** and the median is **`r daily_steps_med`**.
+The mean is **10766.19** and the median is **10765**.
 
 </br>
 
@@ -104,7 +119,8 @@ The mean is **`r daily_steps_mean`** and the median is **`r daily_steps_med`**.
 
 Used `dplyr::filter()` to remove NAs, `dplyr::group_by()` and `dplyr::summarise()` to respectively group by interval and calculate the average of steps for each group. Then `ggplot2::geom_line()` to plot results.
 
-```{r, echo=TRUE, message=FALSE, fig.align='center'}
+
+```r
 int_avg_steps <-
     raw_data %>%
     filter(!is.na(steps)) %>%
@@ -118,17 +134,24 @@ geom_line(mapping = aes(x = interval, y = avg_steps), size = 0.8) +
 labs(x = "Interval", y = "Average number of steps")
 ```
 
+<img src="PA1_template_files/figure-html/unnamed-chunk-7-1.png" style="display: block; margin: auto;" />
+
 </br>
 
 #### 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
 </br>
 
-```{r, echo=TRUE, message=FALSE}
+
+```r
 max_int <- as.numeric(int_avg_steps[which.max(int_avg_steps$avg_steps), 1])
 
 # maximum 5-min interval
 max_int
+```
+
+```
+## [1] 835
 ```
 
 </br>
@@ -141,11 +164,16 @@ max_int
 
 </br>
 
-```{r, echo=TRUE}
+
+```r
 miss_data <- sum(is.na(raw_data$steps))
 
 # number of missing values
 miss_data
+```
+
+```
+## [1] 2304
 ```
 
 </br>
@@ -160,7 +188,8 @@ I replaced all missing values (NAs) with the correspondent 5-minute interval ave
 
 </br>
 
-```{r, echo=TRUE}
+
+```r
 fill_data <- raw_data
 
 fill_data[is.na(fill_data$steps), 1] <- 
@@ -173,7 +202,8 @@ fill_data[is.na(fill_data$steps), 1] <-
 
 </br>
 
-```{r, echo=TRUE, message=FALSE, fig.align='center'}
+
+```r
 # prepare and compute data
 
 fill_daily_steps <- 
@@ -190,23 +220,36 @@ ggplot(fill_daily_steps) +
   labs(x = "", y = "Count", title = "Histogram of the total number of steps taken each day (filled)")
 ```
 
+<img src="PA1_template_files/figure-html/unnamed-chunk-11-1.png" style="display: block; margin: auto;" />
+
 </br>
 
 ####  Calculate and report the mean and median total number of steps taken per day.
 
 </br>
 
-```{r, echo=TRUE}
+
+```r
 # calculate meand and median
 
 fill_steps_mean <- with(fill_daily_steps, round(mean(tot_steps, na.rm = TRUE), digits = 2))
 fill_steps_med  <- median(fill_daily_steps$tot_steps, na.rm = TRUE)
 ```
-```{r, echo=TRUE}
+
+```r
 fill_steps_mean
 ```
-```{r, echo=TRUE}
+
+```
+## [1] 10766.19
+```
+
+```r
 fill_steps_med
+```
+
+```
+## [1] 10766.19
 ```
 
 </br>
@@ -215,12 +258,13 @@ fill_steps_med
 
 </br>
 
-The differences are minimal; the mean and median of the dataset without NAs are respectively **`r daily_steps_mean`** and **`r daily_steps_med`** while the same values for the "filled" dataset are **`r fill_steps_mean`** and **`r fill_steps_med`**.  
+The differences are minimal; the mean and median of the dataset without NAs are respectively **10766.19** and **10765** while the same values for the "filled" dataset are **10766.19** and **10766.1886792**.  
 
 </br>
 The missing values are evenly distributed through the different intervals (full days misses) and replacing them with the interval average doesn't change mean and median values.
 
-```{r, echo=TRUE}
+
+```r
 # number of missing values for each interval
 
 raw_data %>%
@@ -230,9 +274,17 @@ summarise(nr_of_missing = n()) %>%
 glimpse()
 ```
 
+```
+## Observations: 288
+## Variables: 2
+## $ interval      <dbl> 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 100, 10...
+## $ nr_of_missing <int> 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,...
+```
+
 </br>
 
-```{r, echo=TRUE}
+
+```r
 # line plot of number of missing value for each interval
 
 raw_data %>%
@@ -245,12 +297,15 @@ theme_bw() +
 labs(x = "Interval", y = "Number of missing values")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+
 
 ## Are there differences in activity patterns between weekdays and weekends?
 ***
 </br>
 
-```{r, echo=TRUE, message=FALSE, fig.align='center'}
+
+```r
 weekday <-
     c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
 
@@ -272,4 +327,6 @@ theme_bw() +
 facet_grid(rows = vars(day_type)) +
 labs(x = "Interval", y = "Number of steps")
 ```
+
+<img src="PA1_template_files/figure-html/unnamed-chunk-17-1.png" style="display: block; margin: auto;" />
 
